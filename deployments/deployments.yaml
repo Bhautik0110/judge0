@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: j0-api
+  namespace: judge0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: j0-api
+  template:
+    metadata:
+      labels:
+        app: j0-api
+    spec:
+      containers:
+      - name: j0-api
+        image: judge0/judge0:1.13.0
+        livenessProbe:
+          initialDelaySeconds: 40
+          periodSeconds: 10
+          httpGet:
+            path: /workers
+            port: 2358
+        readinessProbe:
+          httpGet:
+            path: /workers
+            port: 2358
+          initialDelaySeconds: 50
+          periodSeconds: 10
+        resources:
+          limits:
+            memory: "125Mi"
+            cpu: "125m"
+        ports:
+        - containerPort: 2358
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /judge0.conf
+          subPath: judge0.conf
+          name: judge0-config
+      volumes:
+      - name: judge0-config
+        configMap:
+          name: judge0
+          items:
+            - key: judge0.conf
+              path: judge0.conf
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: j0-worker
+  namespace: judge0
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: j0-worker
+  template:
+    metadata:
+      labels:
+        app: j0-worker
+    spec:
+      containers:
+      - name: j0-worker
+        image: judge0/judge0:1.13.0
+        command: ["./scripts/workers"]
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /judge0.conf
+          subPath: judge0.conf
+          name: judge0-config
+      volumes:
+      - name: judge0-config
+        configMap:
+          name: judge0
+          items:
+            - key: judge0.conf
+              path: judge0.conf
