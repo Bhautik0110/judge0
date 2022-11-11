@@ -6,10 +6,21 @@ Judge0 is an open-source online code execution system.
 
 Below mentioned components used by `judge0`.
 
-`Postgresql` to store code, and result.
-`Redis` for queue.
-`Master` handle external request, and run code if `wait=true` while create the submission, else do entry in queue.
-`Worker` Worker listen the rdis queue, and execute code.
+`Postgresql` used to store code, and result.
+
+`Redis` for queueing
+
+`API Server` handle external request, and execute code.
+
+`Worker` Worker listen the redis queue, and execute code.
+
+### Working Model
+
+Two ways of submission support by `Judge0`, First is synchronously, and asynchronously with `wait` query parameter while creating submission.
+
+- synchronously: we need to supply `wait=true`, API server run the code, and pass the result in the response.
+
+- asynchronously(default): API server write code to postgresql, and push the message to redis. Available worker can run the code and store result in postgresql.
 
 ### Additional notes
 - Under the hood, judge0 uses isolate(package). It must need cgroup v0.
@@ -39,7 +50,7 @@ $> helm -n judge0 install redis -f ./deployments/redis.yaml bitnami/redis
 # configuration for judge0
 $> k apply -f ./configmap.yaml
 
-# deployment, and svc
+# deployment | svc
 $> k apply -f ./deployments.yaml
 $> k apply -f ./svc.yaml
 ```
@@ -58,5 +69,5 @@ cat hey_result.log
 - https://ce.judge0.com/#system-and-configuration
 
 
-### Quesions
-- [ ] Does `isolate` use container memory limit, cpu limit? 
+### Questions
+- [ ] Does `isolate` use cpu and memory limit of container? 
