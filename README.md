@@ -58,3 +58,5 @@ cat hey_result.log
 - https://ce.judge0.com/#system-and-configuration
 
 
+### Quesions
+- [ ] Does `isolate` use container memory limit, cpu limit? 
